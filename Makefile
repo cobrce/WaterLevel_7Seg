@@ -2,9 +2,9 @@
 # Copyright (c) 2016, Lukasz Marcin Podkalicki <lpodkalicki@gmail.com>
 # --
 
-MCU=atmega328p
-FUSE_L=0xE2
-FUSE_H=0xD1
+MCU=atmega16
+FUSE_L=0xE4
+FUSE_H=0xD7
 F_CPU=8000000
 CC=avr-g++
 LD=avr-ld

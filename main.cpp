@@ -1,4 +1,4 @@
-/* #define TEST // uncomment to enable test mode for simulation */
+#define TEST // uncomment to enable test mode for simulation
 #include <avr/io.h>
 #include <stdint.h>
 #include <util/delay.h>
@@ -6,11 +6,11 @@
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <math.h>
-#include "ShiftRegister.h"
+/* #include "ShiftRegister.h" */
 #include "calibrate.h"
 
 // Pins definition
-#define HB_LED PD3 // heartbeat LED
+#define HB_LED PD7 // heartbeat LED
 #define PIN_UART_TX PD1
 #define PIN_I2C_SDA PC4
 #define PIN_I2C_SCL PC5
@@ -68,9 +68,6 @@ uint8_t swapBits(uint8_t input)
 }
 
 
-// macro to set/clear the 10th bit of the bargraph
-#define setA9 PORTD |= _BV(PD4)
-#define clearA9 PORTD &= ~_BV(PD4)
 
 uint8_t SevenSegNumbers[] = {
     // seven segments coded numbers
@@ -99,24 +96,30 @@ uint8_t extractSevenSegDigit(uint32_t value, uint8_t index)
 // the third ...
 // the fourth shift register has 8 bits of the data of the bargraph swapped (because of schematic)
 // the 10th bit of the bargraph is conencted to pin PD4 of the micro controller
-void displayInShiftRegister()
+uint32_t bargraphValue = 0;
+void display()
 {
+    bargraphValue = calculateBarGraph(levelInPercent, 0);
 
-    uint32_t bargraphValue = calculateBarGraph(levelInPercent, 7);
+    // set the lower 6 bits in PC2~PC7
+    PORTC = bargraphValue << 2;
 
-    uint32_t shiftRegisterValue = bargraphValue | extractSevenSegDigit(levelInPercent, 2);
+    // set the upper 4 bits in PD4~PD2 and PD0
+    uint32_t upperBargraph = bargraphValue >> 6;
+    upperBargraph = ((upperBargraph & 0xFE) << 1) | (upperBargraph & 1);
+    PORTD = upperBargraph;
 
-    WriteRegister(swapBits(((uint8_t *)&shiftRegisterValue)[1])); // write the data of the bargraph
-    WriteRegister(((uint8_t *)&shiftRegisterValue)[0]);           // write the data to be displayed by the seven seg
-    WriteRegister(extractSevenSegDigit(levelInPercent, 1));
-    WriteRegister(extractSevenSegDigit(levelInPercent, 0));
 
-    if ((shiftRegisterValue >> 16) & 1) // complete the data of the bargraph
-        setA9;
-    else
-        clearA9;
+    
 
-    UpdateRegister(); // latch
+    uint8_t tempLevel = levelInPercent;
+    if (tempLevel > 99)
+        tempLevel = 99;
+    
+    PORTA = extractSevenSegDigit(tempLevel, 1);
+    PORTB = extractSevenSegDigit(tempLevel, 0);
+
+    /* UpdateRegister(); // latch */
 }
 
 uint16_t measureDistance() // in cm
@@ -177,7 +180,7 @@ uint16_t measureMeanDistance()
 // write the duty cycle of the heart beat led
 void pwmWrite(uint8_t value)
 {
-    OCR2B = value;
+    OCR2 = value;
 }
 
 // initialize the timer1 for 10ms interrupt
@@ -186,17 +189,18 @@ void initTimer1()
     //--------------------------------------------------
     // Timer1 for the heartbeat update
     //--------------------------------------------------
-    TCCR1B = (1 << WGM12) | (1 << CS11) | (1 << CS10); // Clear Timer on Compare Match (Mode 4), no pin output, TOP=OCR1A, 64 prescaler
+    TCCR1A = (1 << WGM12) ; // Clear Timer on Compare Match (Mode 4), no pin output, TOP=OCR1A
+    TCCR1B |= (1 << CS11) | (1 << CS10);// 64 prescaler
     OCR1A = ((F_CPU / 64) / 100);                      // every 10ms
-    TIMSK1 = (1 << OCIE1A);
+    TIMSK = (1 << OCIE1A);
 }
 
 // init the pwm pin
 void pwmInit()
 {
     DDRD |= _BV(HB_LED);
-    TCCR2A = _BV(COM2B1) | _BV(WGM21) | _BV(WGM20); // Fast pwm mode, output in OC2B pin (PD3)
-    TCCR2B = _BV(CS20);                             // no prescaling for the timer
+    TCCR2 = _BV(COM21) | _BV(WGM21) | _BV(WGM20); // Fast pwm mode, output in OC2 pin (PD7)
+    TCCR2 |= _BV(CS20);                             // no prescaling for the timer
     pwmWrite(0);                                    // initially set the duty cycle at 0
 }
 
@@ -207,16 +211,22 @@ void init()
     //--------------------------------------------------
     // GPIOs
     //--------------------------------------------------
-    UCSR0B &= ~_BV(RXEN0); // Disable UART RX
-    DDRD = _BV(PIN_UART_TX);
-    DDRD |= _BV(PD4); // PD4 as output for A9 of bargraph
+    UCSRB &= ~_BV(RXEN); // Disable UART RX
+    /* DDRD = _BV(PIN_UART_TX); */
+    /* DDRD |= _BV(PD4); // PD4 as output for A9 of bargraph */
+
+    DDRC = 255;
+    DDRD = 255;
+    DDRA = 255;
+    DDRB = 255;
+
     i2c_init();
     initMillis();
 #ifndef TEST
     initTimer1();
 #endif
     pwmInit();
-    InitShiftRegister();
+    /* InitShiftRegister(); */
 
     sei();
 }
@@ -261,7 +271,7 @@ int main(void)
         else if (levelInPercent < 11)
             step = 6;
         levelInPercent += step;
-        displayInShiftRegister();
+        display();
 
         debug_dec(levelInPercent);
         debug_putc(' ');
@@ -296,7 +306,7 @@ int main(void)
         debug_dec(levelInPercent); // send value through serial
         debug_str("% ");
 
-        displayInShiftRegister(); 
+        display(); 
 
         _delay_ms(200);
     }
