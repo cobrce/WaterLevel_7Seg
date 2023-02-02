@@ -42,7 +42,7 @@ volatile uint16_t distance;       // decalred as global for debug
 volatile uint16_t levelInPercent; // same as above, but this is a claculated percentage of water level
 
 // calculate a bargraph representation of a value then shift it to fit the shift register
-// the bargraph contains 10 leds, the percentage is rounded up to 10s, example : 51 is displayed as 6leds, 0 is 1 led, 34 is 4 leds..etc
+// the bargraph contains 10 leds, the percentage is rounded down to 10s, example : 51 is displayed as 5leds, 0 is 0 led, 34 is 3 leds..etc
 uint32_t calculateBarGraph(uint16_t valueInPercent, uint8_t shift)
 {
 
@@ -50,7 +50,7 @@ uint32_t calculateBarGraph(uint16_t valueInPercent, uint8_t shift)
         valueInPercent = 100;
     uint32_t result = 0;
 
-    uint8_t valueInTens = ((valueInPercent / 10) + 1) % 11; // round up the percents to tens
+    uint8_t valueInTens = ((valueInPercent / 10)) % 11; // round up the percents to tens
 
     while (valueInTens--) // for each "1" in tens (i.e for each 10 in percents) light an led
         result = (result << 1) | 1;
@@ -96,7 +96,8 @@ uint8_t extractSevenSegDigit(uint32_t value, uint8_t index)
 // the third ...
 // the fourth shift register has 8 bits of the data of the bargraph swapped (because of schematic)
 // the 10th bit of the bargraph is conencted to pin PD4 of the micro controller
-uint32_t bargraphValue = 0;
+uint32_t bargraphValue = 0; // set as global for debugging
+volatile uint8_t topBargraphValue = 0; // updated by TIMER1
 void display()
 {
     bargraphValue = calculateBarGraph(levelInPercent, 0);
@@ -104,13 +105,13 @@ void display()
     // set the lower 6 bits in PC2~PC7
     PORTC = bargraphValue << 2;
 
+    // if water level is above 95 then use a solid led light, otherwise blink it 
+    uint8_t valueOfPD4 = ((levelInPercent > 95) ? 1 : topBargraphValue) << PD4;
     // set the upper 4 bits in PD4~PD2 and PD0
     uint32_t upperBargraph = bargraphValue >> 6;
-    upperBargraph = ((upperBargraph & 0xFE) << 1) | (upperBargraph & 1);
-    PORTD = upperBargraph;
+    upperBargraph = valueOfPD4 | ((upperBargraph & 0b110) << 1) | (upperBargraph & 1);
 
-
-    
+    PORTD = upperBargraph ;
 
     uint8_t tempLevel = levelInPercent;
     if (tempLevel > 99)
@@ -243,9 +244,18 @@ void heartBeat()
 }
 
 // interrupt handler for the timer1 compare match that ticks every 10ms
+volatile uint8_t topBargraphBlinkCounter = 0;
 ISR(TIMER1_COMPA_vect)
 {
     heartBeat();              // update the heartbeat pwm
+    
+    // blink the top bargraph led, value will be written by the "display" function
+    topBargraphBlinkCounter++;
+    if (topBargraphBlinkCounter > 10)
+    {
+        topBargraphBlinkCounter = 0;
+        topBargraphValue = 1 - topBargraphValue;
+    }
 }
 
 int main(void)
