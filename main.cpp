@@ -190,8 +190,8 @@ void initTimer1()
     //--------------------------------------------------
     // Timer1 for the heartbeat update
     //--------------------------------------------------
-    TCCR1A = (1 << WGM12) ; // Clear Timer on Compare Match (Mode 4), no pin output, TOP=OCR1A
-    TCCR1B |= (1 << CS11) | (1 << CS10);// 64 prescaler
+    TCCR1A = 0; // no pin output
+    TCCR1B = (1 << WGM12)|(1 << CS11) | (1 << CS10);// 64 prescaler, Clear Timer on Compare Match (Mode 4),  TOP=OCR1A
     OCR1A = ((F_CPU / 64) / 100);                      // every 10ms
     TIMSK = (1 << OCIE1A);
 }
@@ -223,9 +223,7 @@ void init()
 
     i2c_init();
     initMillis();
-#ifndef TEST
     initTimer1();
-#endif
     pwmInit();
     /* InitShiftRegister(); */
 
