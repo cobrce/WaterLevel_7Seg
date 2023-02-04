@@ -254,7 +254,7 @@ ISR(TIMER1_COMPA_vect)
     
     // blink the top bargraph led, value will be written by the "display" function
     topBargraphBlinkCounter++;
-    if (topBargraphBlinkCounter > 10)
+    if (topBargraphBlinkCounter > 50)
     {
         topBargraphBlinkCounter = 0;
         topBargraphValue = 1 - topBargraphValue;
