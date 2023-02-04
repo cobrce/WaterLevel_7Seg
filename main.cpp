@@ -84,12 +84,17 @@ uint8_t SevenSegNumbers[] = {
 };
 
 // extract a digit form a number at a given index, then return its seven segment reperesentation
-uint8_t extractSevenSegDigit(uint32_t value, uint8_t index)
+uint8_t extractSevenSegDigit(uint32_t value, uint8_t index, uint8_t reverse=false)
 {
     for (int i = 0; i < index; i++)
         value /= 10;
     value %= 10;
-    return SevenSegNumbers[value]; // convert number into 7 seg representation
+    uint8_t result = SevenSegNumbers[value]; // convert number into 7 seg representation
+    if (reverse)
+        result = ~result;
+    return result;
+}
+
 }
 // the first shift register has the data of the last digit of seven segment display and the the first bit of the bargraph
 // the second shift register has the data of the second digit of seven segments
@@ -117,8 +122,8 @@ void display()
     if (tempLevel > 99)
         tempLevel = 99;
     
-    PORTA = extractSevenSegDigit(tempLevel, 1);
-    PORTB = extractSevenSegDigit(tempLevel, 0);
+    PORTA = extractSevenSegDigit(tempLevel, 1,true); // reverse is set to true because of common anode
+    PORTB = extractSevenSegDigit(tempLevel, 0,true);
 
     /* UpdateRegister(); // latch */
 }
