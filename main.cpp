@@ -237,9 +237,16 @@ void init()
 
 volatile uint8_t heartBeatValue = 20; // the initial value of the hearbeat pwm
 volatile int8_t heartBeatDelta = 1;   // the step to progress the pwm value
+volatile uint8_t heartBeatDelay = 0;
 void heartBeat()
 {
-    if ((heartBeatValue > 100) | (heartBeatValue < 20)) // every time a max/min value is reached change the direction of the pwm
+    heartBeatDelay++;
+    if (heartBeatDelay < 2)
+        return;
+    
+    heartBeatDelay = 0;
+
+    if ((heartBeatValue > 60) | (heartBeatValue < 10)) // every time a max/min value is reached change the direction of the pwm
         heartBeatDelta = -heartBeatDelta;
 
     heartBeatValue += heartBeatDelta; // increase (or decrease) the pwm value
