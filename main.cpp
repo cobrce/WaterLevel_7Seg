@@ -198,7 +198,7 @@ void initTimer1()
     TCCR1A = 0; // no pin output
     TCCR1B = (1 << WGM12)|(1 << CS11) | (1 << CS10);// 64 prescaler, Clear Timer on Compare Match (Mode 4),  TOP=OCR1A
     OCR1A = ((F_CPU / 64) / 100);                      // every 10ms
-    TIMSK = (1 << OCIE1A);
+    TIMSK |= (1 << OCIE1A);
 }
 
 // init the pwm pin
