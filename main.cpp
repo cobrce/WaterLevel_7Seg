@@ -261,6 +261,7 @@ ISR(TIMER1_COMPA_vect)
     }
 }
 
+volatile uint32_t now; 
 int main(void)
 {
     init();
@@ -270,25 +271,24 @@ int main(void)
     levelInPercent = 11;
     int8_t step = 6;
     /* int8_t errorCounter = 20; */
+    volatile uint32_t prevUpdate = 0;
     while (1)
     {
-        /* if (errorCounter++ == 20) */
-        /* { */
-        /*     errors[0] = 12; */
-        /*     errors[1] = 24; */
-        /*     errorCounter = 0; */
-        /* } */
+        now = millis();
+        if ((now - prevUpdate) >= 1000)
+        {
+            prevUpdate = now;
 
-        if (levelInPercent > 90)
-            step = -6;
-        else if (levelInPercent < 11)
-            step = 6;
-        levelInPercent += step;
+            if (levelInPercent > 90)
+                step = -6;
+            else if (levelInPercent < 11)
+                step = 6;
+            levelInPercent += step;
+
+            debug_dec(levelInPercent);
+            debug_putc(' ');
+        }
         display();
-
-        debug_dec(levelInPercent);
-        debug_putc(' ');
-        _delay_ms(1000);
     }
 #endif
 
