@@ -26,7 +26,8 @@ all:
 	${SIZE} -C --mcu=${MCU} ${TARGET}.elf
 
 flash: all
-	${AVRDUDE} -p ${MCU} -c stk500v1 -P COM5 -b 115200 -V -U flash:w:${TARGET}.hex:i -U eeprom:w:${TARGET}.eep:a -F
+	${AVRDUDE} -p ${MCU} -c stk500v1 -P COM5 -b 115200 -V -U flash:w:${TARGET}.hex:i -U eeprom:w:${TARGET}.eep:a
+    
 
 fuse:
 	$(AVRDUDE) -p ${MCU} -c stk500v1 -P COM5 -b 115200 -U hfuse:w:${FUSE_H}:m -U lfuse:w:${FUSE_L}:m
