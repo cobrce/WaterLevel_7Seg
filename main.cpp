@@ -95,6 +95,17 @@ uint8_t extractSevenSegDigit(uint32_t value, uint8_t index, uint8_t reverse=fals
     return result;
 }
 
+void displayInPins(uint8_t value, volatile uint8_t* port, char* pins, uint8_t number_of_pins)
+{
+    for (uint8_t i = 0; i < number_of_pins;i++)
+    {
+        uint8_t pinValue = (value >> i) & 1;
+        if (pinValue)
+            *port |= _BV(pins[i]);
+        else
+            *port &= ~_BV(pins[i]);
+    }
+
 }
 // the first shift register has the data of the last digit of seven segment display and the the first bit of the bargraph
 // the second shift register has the data of the second digit of seven segments
@@ -105,18 +116,14 @@ uint32_t bargraphValue = 0; // set as global for debugging
 volatile uint8_t topBargraphValue = 0; // updated by TIMER1
 void display()
 {
-    bargraphValue = calculateBarGraph(levelInPercent, 0);
-
-    // set the lower 6 bits in PC2~PC7
-    PORTC = bargraphValue << 2;
-
     // if water level is above 95 then use a solid led light, otherwise blink it 
-    uint8_t valueOfPD4 = ((levelInPercent > 95) ? 1 : topBargraphValue) << PD4;
-    // set the upper 4 bits in PD4~PD2 and PD0
-    uint32_t upperBargraph = bargraphValue >> 6;
-    upperBargraph = valueOfPD4 | ((upperBargraph & 0b110) << 1) | (upperBargraph & 1);
+    bargraphValue = ((levelInPercent > 95) ? 1 : topBargraphValue) << 9 |
+                    calculateBarGraph(levelInPercent, 0);
 
-    PORTD = upperBargraph ;
+    char portdPins[] = {PD0,PD2,PD3,PD4};
+    char portcPins[] = {PC2,PC3,PC4,PC5,PC6,PC7};
+    displayInPins(bargraphValue & 0b111111, &PORTC, portcPins, sizeof(portcPins));
+    displayInPins(bargraphValue >> 6, &PORTD, portdPins, sizeof(portdPins));
 
     uint8_t tempLevel = levelInPercent;
     if (tempLevel > 99)
