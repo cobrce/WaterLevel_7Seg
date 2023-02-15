@@ -288,8 +288,8 @@ int main(void)
 
 // this code is used for tests in simulator, so the measurments are generated and the timers are replaced by delays
 #ifdef TEST
-    levelInPercent = 11;
-    int8_t step = 6;
+    levelInPercent = 88;
+    int8_t step = 0;
     /* int8_t errorCounter = 20; */
     volatile uint32_t prevUpdate = 0;
     while (1)
@@ -299,11 +299,11 @@ int main(void)
         {
             prevUpdate = now;
 
-            if (levelInPercent > 90)
-                step = -6;
-            else if (levelInPercent < 11)
-                step = 6;
-            levelInPercent += step;
+            /* if (levelInPercent > 90) */
+            /*     step = -6; */
+            /* else if (levelInPercent < 11) */
+            /*     step = 6; */
+            /* levelInPercent += step; */
 
             debug_dec(levelInPercent);
             debug_putc(' ');
