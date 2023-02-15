@@ -1,4 +1,4 @@
-#define TEST // uncomment to enable test mode for simulation
+/* #define TEST // uncomment to enable test mode for simulation */
 #include <avr/io.h>
 #include <stdint.h>
 #include <util/delay.h>
@@ -116,11 +116,11 @@ uint32_t bargraphValue = 0; // set as global for debugging
 volatile uint8_t topBargraphValue = 0; // updated by TIMER1
 void display()
 {
-    // if water level is above 95 then use a solid led light, otherwise blink it 
-    bargraphValue = ((levelInPercent > 95) ? 1 : topBargraphValue) << 9 |
-                    calculateBarGraph(levelInPercent, 0);
+    // if water level is above 95 then use a solid led light, otherwise blink it (the blink is done by TIMER1)
+    topBargraphValue = levelInPercent > 95;
+    bargraphValue = calculateBarGraph(levelInPercent, 0);
 
-    char portdPins[] = {PD0,PD2,PD3,PD4};
+    char portdPins[] = {PD0,PD2,PD3};
     char portcPins[] = {PC2,PC3,PC4,PC5,PC6,PC7};
     displayInPins(bargraphValue & 0b111111, &PORTC, portcPins, sizeof(portcPins));
     displayInPins(bargraphValue >> 6, &PORTD, portdPins, sizeof(portdPins));
@@ -262,17 +262,23 @@ void heartBeat()
 
 // interrupt handler for the timer1 compare match that ticks every 10ms
 volatile uint8_t topBargraphBlinkCounter = 0;
+volatile uint8_t topBargraphBlinkState = 0;
 ISR(TIMER1_COMPA_vect)
 {
     heartBeat();              // update the heartbeat pwm
     
-    // blink the top bargraph led, value will be written by the "display" function
+    // blink the top bargraph led
     topBargraphBlinkCounter++;
     if (topBargraphBlinkCounter > 50)
     {
+        topBargraphBlinkState = 1 - topBargraphBlinkState;
         topBargraphBlinkCounter = 0;
-        topBargraphValue = 1 - topBargraphValue;
     }
+    char topBarGraphPin[] = {PD4};
+    const auto topBargraphPort = &PORTD;
+    // either blink or write a solid value on bargraph top led (depends on the value calculated in display)
+    displayInPins(topBargraphBlinkState | topBargraphValue,topBargraphPort,topBarGraphPin,1);
+
 }
 
 volatile uint32_t now; 
