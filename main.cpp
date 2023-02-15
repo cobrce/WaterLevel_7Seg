@@ -248,12 +248,12 @@ volatile uint8_t heartBeatDelay = 0;
 void heartBeat()
 {
     heartBeatDelay++;
-    if (heartBeatDelay < 2)
+    if (heartBeatDelay < 5)
         return;
     
     heartBeatDelay = 0;
 
-    if ((heartBeatValue > 60) | (heartBeatValue < 10)) // every time a max/min value is reached change the direction of the pwm
+    if ((heartBeatValue > 20) | (heartBeatValue < 3)) // every time a max/min value is reached change the direction of the pwm
         heartBeatDelta = -heartBeatDelta;
 
     heartBeatValue += heartBeatDelta; // increase (or decrease) the pwm value
