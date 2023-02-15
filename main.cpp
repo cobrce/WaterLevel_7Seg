@@ -325,22 +325,28 @@ int main(void)
 
     calibrate(); // do the calibration (if enable)
 
+    static volatile uint32_t prevMeasurement = 0;
     while (1) // main loop
     {
-        uint16_t distance = measureMeanDistance(); // start the distance measurement and return the result
-
-        levelInPercent = ((FullHeight - distance) * 100 / FULL_WATER);
-
-        if (levelInPercent > 100) // maximum 100%
-        {
-            levelInPercent = 100;
-            // FullHeight = FULL_WATER + mean_distance; // update fullheight
-        }
-        debug_dec(levelInPercent); // send value through serial
-        debug_str("% ");
+        /* uint16_t distance = measureMeanDistance(); // start the distance measurement and return the result */
 
         display(); 
 
-        _delay_ms(200);
+        auto now = millis();
+        if (prevMeasurement && (now - prevMeasurement)<200)
+            continue;
+
+        prevMeasurement = now;
+        uint16_t distance = measureDistance();
+        if ((distance | 1) == 8191) // is it an error code?
+            continue;
+        levelInPercent = ((FullHeight - distance) * 100 / FULL_WATER);
+
+        if (levelInPercent > 100) // maximum 100%
+            levelInPercent = 100;
+            // FullHeight = FULL_WATER + mean_distance; // update fullheight
+
+        /* debug_dec(levelInPercent); // send value through serial */
+        /* debug_str("% "); */
     }
 }
