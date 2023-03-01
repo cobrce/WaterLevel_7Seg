@@ -3,6 +3,9 @@
 Version: 1.0.2<br>
 Release date: 2017 Jun 27<br>
 
+# This library has been modified to work with ATmega16
+# Link to original library for ATmega328 :  https://github.com/yetifrisstlama/vl53l0x-non-arduino
+
 ## Summary
 
 This is a lightweight C library that helps to interface with ST's VL53L0X time-of-flight distance sensor. It makes it simple to configure the sensor and read range data from it via I&sup2;C.
