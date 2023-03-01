@@ -11,10 +11,10 @@ LD=avr-ld
 OBJCOPY=avr-objcopy
 SIZE=avr-size
 AVRDUDE=avrdude
-CFLAGS=-std=c++0x -Wall -g -Os  -gdwarf-2 -mmcu=${MCU} -DF_CPU=${F_CPU} -I. -Ivl53l0x-non-arduino/util
+CFLAGS=-std=c++0x -Wall -g -Os  -gdwarf-2 -mmcu=${MCU} -DF_CPU=${F_CPU} -I. -Ivl53l0x-non-arduino_atmega16/util
 TARGET=main
 
-SRCS = main.cpp  $(wildcard vl53l0x-non-arduino/*.c) $(wildcard vl53l0x-non-arduino/util/*.c)
+SRCS = main.cpp  $(wildcard vl53l0x-non-arduino_atmega16/*.c) $(wildcard vl53l0x-non-arduino_atmega16/util/*.c)
 
 
 

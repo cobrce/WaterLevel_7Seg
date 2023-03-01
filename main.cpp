@@ -15,10 +15,10 @@
 #define PIN_I2C_SDA PC4
 #define PIN_I2C_SCL PC5
 // VL53L0X sensor library
-#include "vl53l0x-non-arduino/VL53L0X.h"
-#include "vl53l0x-non-arduino/util/i2cmaster.h"
-#include "vl53l0x-non-arduino/util/debugPrint.h"
-#include "vl53l0x-non-arduino/util/millis.h"
+#include "vl53l0x-non-arduino_atmega16/VL53L0X.h"
+#include "vl53l0x-non-arduino_atmega16/util/i2cmaster.h"
+#include "vl53l0x-non-arduino_atmega16/util/debugPrint.h"
+#include "vl53l0x-non-arduino_atmega16/util/millis.h"
 
 #define __COMPILING_AVR_LIBC__ 1 // just to avoid some intellisence annoying messages
 
